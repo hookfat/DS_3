@@ -168,6 +168,7 @@ typedef struct _Point{
 //useful function
 void reset_sandbox_B_to_A(Sandbox* A, Sandbox* B);
 void set_legal_point(Sandbox* A, place_point* p, char mycolor);
+bool look_around(int row, int col, Sandbox* board, char mycolor, int*index);
 
 void algorithm_A(Board board, Player player, int index[]){
     Sandbox sandbox_origin;
@@ -210,7 +211,7 @@ void algorithm_A(Board board, Player player, int index[]){
                 if(sandbox_1.win_the_game(player)){
                     index[0] = i;
                     index[1] = j;
-                    cout << i <<','<<j << endl;
+                    //cout << i <<','<<j << endl;
 
                     return;
                 }
@@ -261,14 +262,17 @@ void algorithm_A(Board board, Player player, int index[]){
                 if(kill_flag){
                     index[0] = i;
                     index[1] = j;
-                    cout << "you already die"<<endl;
-                    cout << i<< ',' <<j << endl;
-                    system("pause");
+                    //cout << "you already die"<<endl;
+                    //cout << i<< ',' <<j << endl;
+                    //system("pause");
                     return;
                 }
             }
         }
     }
+
+
+
     for(int i = 0; i<ROW; i++){
         for(int j = 0; j<COL; j++){
             if(place[i][j].lose){
@@ -277,11 +281,25 @@ void algorithm_A(Board board, Player player, int index[]){
         }
     }
     //system("pause");
-    cin >> index[0] >> index[1];
-    return;
+    //cin >> index[0] >> index[1];
+    //return;
 
     //defense
-
+    for(int i = 0; i<ROW; i++){
+        for(int j = 0; j<COL; j++){
+            if(sandbox_origin.cells[i][j].color == enemycolor){
+                if(!look_around(i, j, &sandbox_origin, mycolor, index)){
+                    cout <<"defense:"<< i << ',' << j << endl;
+                    if(index[0] != -1){
+                        //cout <<"defense:"<< i << ',' << j << endl;
+                        //system("pause");
+                        return;
+                    }
+                    //system("pause");
+                }
+            }
+        }
+    }
 
 
 
@@ -316,3 +334,172 @@ void set_legal_point(Sandbox* A, place_point* p[], char mycolor){
         }
     }
 }
+bool look_around(int row, int col, Sandbox* board, char mycolor, int*index){
+    int cap = board->cells[row][col].capacity;
+    int num = board->cells[row][col].orbs_num;
+    bool safe = false;
+    Point p[4];
+    bool around[4];
+    around[0] = true; around[1] = true; around[2] = true; around[3] = true;
+    if(num == cap-1){
+        if(row+1 < ROW){
+            if(board->cells[row+1][col].color == mycolor){
+                if(board->cells[row+1][col].orbs_num == board->cells[row+1][col].capacity-1){
+                    index[0] = row+1;
+                    index[1] = col;
+                    return false;
+                }
+            }
+        }
+        if(row-1 >= 0){
+            if(board->cells[row-1][col].color == mycolor){
+                if(board->cells[row-1][col].orbs_num == board->cells[row-1][col].capacity-1){
+                    index[0] = row-1;
+                    index[1] = col;
+                    return false;
+                }
+            }
+        }
+        if(col+1 < COL){
+            if(board->cells[row][col+1].color == mycolor){
+                if(board->cells[row][col+1].orbs_num == board->cells[row][col+1].capacity-1){
+                    index[0] = row;
+                    index[1] = col+1;
+                    return false;
+                }
+            }
+        }
+        if(col-1 >= 0){
+            if(board->cells[row][col-1].color == mycolor){
+                if(board->cells[row][col-1].orbs_num == board->cells[row][col-1].capacity-1){
+                    index[0] = row;
+                    index[1] = col-1;
+                    return false;
+                }
+            }
+        }
+    }
+    else{
+        if(row+1 < ROW){
+            if(board->cells[row+1][col].color == mycolor){
+                if(board->cells[row+1][col].capacity == cap-1){
+                    if(board->cells[row+1][col].orbs_num >= num){
+                        safe = true;
+                    }
+                    else if(board->cells[row+1][col].orbs_num == num-1){
+                        p[0].x = row+1;
+                        p[0].y = col;
+                    }
+                }
+                else if(board->cells[row+1][col].capacity == cap){
+                    if(board->cells[row+1][col].orbs_num > num){
+                        safe = true;
+                    }
+                    else if(board->cells[row+1][col].orbs_num == num){
+                        p[0].x = row+1;
+                        p[0].y = col;
+                    }
+                }
+            }
+            else if(num == 1 && board->cells[row+1][col].capacity == cap-1 && board->cells[row+1][col].color == 'w'){
+                p[0].x = row+1;
+                p[0].y = col;
+                around[0] = false;
+            }
+        }
+        if(row-1 >= 0){
+            if(board->cells[row-1][col].color == mycolor){
+                if(board->cells[row-1][col].capacity == cap-1){
+                    if(board->cells[row-1][col].orbs_num >= num){
+                        safe = true;
+                    }
+                    else if(board->cells[row-1][col].orbs_num == num-1){
+                        p[1].x = row-1;
+                        p[1].y = col;
+                    }
+                }
+                else if(board->cells[row-1][col].capacity == cap){
+                    if(board->cells[row-1][col].orbs_num > num){
+                        safe = true;
+                    }
+                    else if(board->cells[row-1][col].orbs_num == num){
+                        p[1].x = row-1;
+                        p[1].y = col;
+                    }
+                }
+            }
+            else if(num == 1 && board->cells[row-1][col].capacity == cap-1 && board->cells[row-1][col].color == 'w'){
+                p[1].x = row-1;
+                p[1].y = col;
+                around[1] = false;
+            }
+        }
+        if(col+1 < COL){
+            if(board->cells[row][col+1].color == mycolor){
+                if(board->cells[row][col+1].capacity == cap-1){
+                    if(board->cells[row][col+1].orbs_num >= num){
+                        safe = true;
+                    }
+                    else if(board->cells[row][col+1].orbs_num == num-1){
+                        p[2].x = row;
+                        p[2].y = col+1;
+                    }
+                }
+                else if(board->cells[row][col+1].capacity == cap){
+                    if(board->cells[row][col+1].orbs_num > num){
+                        safe = true;
+                    }
+                    else if(board->cells[row][col+1].orbs_num == num){
+                        p[2].x = row;
+                        p[2].y = col+1;
+                    }
+                }
+            }
+            else if(num == 1 && board->cells[row][col+1].capacity == cap-1 && board->cells[row][col+1].color == 'w'){
+                p[2].x = row;
+                p[2].y = col+1;
+                around[2] = false;
+            }
+        }
+        if(col-1 >= 0){
+            if(board->cells[row][col-1].color == mycolor){
+                if(board->cells[row][col-1].capacity == cap-1){
+                    if(board->cells[row][col-1].orbs_num >= num){
+                        safe = true;
+                    }
+                    else if(board->cells[row][col-1].orbs_num == num-1){
+                        p[3].x = row;
+                        p[3].y = col-1;
+                    }
+                }
+                else if(board->cells[row][col-1].capacity == cap){
+                    if(board->cells[row][col-1].orbs_num > num){
+                        safe = true;
+                    }
+                    else if(board->cells[row][col-1].orbs_num == num){
+                        p[3].x = row;
+                        p[3].y = col-1;
+                    }
+                }
+            }
+            else if(num == 1 && board->cells[row][col-1].capacity == cap-1 && board->cells[row][col-1].color == 'w'){
+                p[3].x = row;
+                p[3].y = col-1;
+                around[3] = false;
+            }
+        }
+        if(safe)return true;
+        else{
+            for(int i = 0; i<4; i++){
+                if(p[i].x != -1){
+                    index[0] = p[i].x;
+                    index[1] = p[i].y;
+                    return false;
+                }
+            }
+
+        }
+    }
+
+}
+
